@@ -3,7 +3,7 @@ import Rota from "./Rota.svelte";
 const app = new Rota({
 	target: document.body,
 	props: {
-		name: "world",
+		title: "Jogo das damas",
 	},
 });
 

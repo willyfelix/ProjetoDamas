@@ -42,136 +42,124 @@
 			}
 		}
 
-		mover(i, j) {
-			const peca = this.tabuleiro[i][j];
-			const pecaExiste = peca.length > 0;
-			if (pecaExiste === false) {
-				return;
-			}
-
-			if (peca === this.branco) {
-				const jogada1Linha = i - 1;
-				const jogada1Coluna = j - 1;
-
-				const jogada2Linha = i - 1;
-				const jogada2Coluna = j + 1;
-
-				this.mostrarOpcoes(
-					jogada1Linha,
-					jogada1Coluna,
-					jogada2Linha,
-					jogada2Coluna
-				);
-
-
-				/* As dua condicionais são para esquerda e direita, mas até o momento não funcionam
-
-				Willy, você pode inserir o que fez na rota, se não der certo a gente conversa
-
-				
-
-				if(verificarSeJogadaEValida(i,j)){
-				if(i==j){//esquerda; sempre que i==j o movimento é para esquerda
-					this.tabuleiro[i][j]=" "
-				jogada1= this.tabuleiro[i-1][j-1]= "⚪"
-				return jogada1
-				}
-				else{
-					this.tabuleiro[i][j]=" "
-					jogada2= this.tabuleiro[i-1][j+1]="⚪"
-					return jogada2
-				}
-			}
-
-			*/
-			}
-
-			if (peca === this.preto) {
-				const jogada1Linha = i + 1;
-				const jogada1Coluna = j - 1;
-
-				const jogada2Linha = i + 1;
-				const jogada2Coluna = j + 1;
-
-				this.mostrarOpcoes(
-					jogada1Linha,
-					jogada1Coluna,
-					jogada2Linha,
-					jogada2Coluna
-				);
-				/*
-
-			if(verificarSeJogadaEValida(i,j) ){
-				if(i==j){//esquerda
-					this.tabuleiro[i][j]=" "
-				jogada1= this.tabuleiro[i+1][j-1]= "⚫"
-				return 
-				}
-				else {
-					this.tabuleiro[i][j]=" "
-					jogada2= this.tabuleiro[i+1][j+1]="⚫"
-					return 
-				}
-
-
-
-			}*/	
-			}
-
-
-		}
-
-		mostrarOpcoes(
-			jogada1Linha,
-			jogada1Coluna,
-			jogada2Linha,
-			jogada2Coluna
-		) {
-			const jogada1Validada = this.verificarSeJogadaEValida(
-				jogada1Linha,
-				jogada1Coluna
-			);
-			const jogada2Validada = this.verificarSeJogadaEValida(
-				jogada2Linha,
-				jogada2Coluna
-			);
-
-			if (jogada1Validada == true) {
-				this.tabuleiro[jogada1Linha][jogada1Coluna] = this.roxa;
-			}
-
-			if (jogada2Validada == true) {
-				this.tabuleiro[jogada2Linha][jogada2Coluna] = this.roxa;
-			}
-		}
-
 		verificarSeJogadaEValida(i, j) {
 			const iEValido = i >= 0 && i < this.tabuleiro.length;
 			const jEValido = j >= 0 && j < this.tabuleiro.length;
 
 			const estaDentroDoTabuleiro = iEValido && jEValido;
-			const existeUmaPeca = this.tabuleiro[i][j].length > 0;
+			if (estaDentroDoTabuleiro == true) {
+				const existeUmaPeca = this.tabuleiro[i][j].length > 0;
+				if (existeUmaPeca == false) {
+					return true;
+				}
+			}
 
-			if (estaDentroDoTabuleiro == true && existeUmaPeca == false) {
-				return true;
-			} else {
-				return false;
+			return false;
+		}
+
+		mostrarOpcoes(jogada1, jogada2) {
+			const jogada1Validada = this.verificarSeJogadaEValida(
+				jogada1.linha,
+				jogada1.coluna
+			);
+			const jogada2Validada = this.verificarSeJogadaEValida(
+				jogada2.linha,
+				jogada2.coluna
+			);
+
+			if (jogada1Validada == true) {
+				this.tabuleiro[jogada1.linha][jogada1.coluna] = this.roxa;
+			}
+
+			if (jogada2Validada == true) {
+				this.tabuleiro[jogada2.linha][jogada2.coluna] = this.roxa;
+			}
+		}
+
+		limparOpcoes() {
+			const tamanho = this.tabuleiro.length;
+
+			for (let i = 0; i < tamanho; i++) {
+				for (let j = 0; j < tamanho; j++) {
+					if (this.tabuleiro[i][j] === this.roxa) {
+						this.tabuleiro[i][j] = "";
+					}
+				}
 			}
 		}
 	}
 
+	class OpcaoDeJogada {
+		constructor(i, j) {
+			this.linha = i;
+			this.coluna = j;
+			this.peca = null;
+		}
+	}
+
 	const jogo = new Jogo();
+
 	jogo.montarTabuleiro();
+
+	$: tabuleiro = jogo.tabuleiro;
+	$: pecaSelecionada = {};
+
+	function mover(i, j) {
+		const peca = jogo.tabuleiro[i][j];
+		const pecaExiste = peca.length > 0;
+
+		// encerra jogada porque a posicao que o usuario clicou no tabuleiro nao existe peca
+		if (pecaExiste === false) {
+			return;
+		}
+
+		// se o usuario clicou em uma peca roxa entao movemos a peça ja selecionada para a posição que o usuário acabou de clicar
+		if (peca === jogo.roxa) {
+			// remover peca da posicao original
+			const linha = pecaSelecionada.linha;
+			const coluna = pecaSelecionada.coluna;
+			jogo.tabuleiro[linha][coluna] = "";
+
+			// colocar peca na posicao destino
+			jogo.tabuleiro[i][j] = pecaSelecionada.peca;
+
+			jogo.limparOpcoes();
+
+			tabuleiro = jogo.tabuleiro;
+			return;
+		}
+
+		// se peca existe atualizamos a variavel pecaSelecionada
+		pecaSelecionada = new OpcaoDeJogada(i, j);
+		pecaSelecionada.peca = peca;
+
+		// mostra as opções disponiveis para a peça clicada
+		let jogada1, jogada2;
+
+		if (peca === jogo.branco) {
+			jogada1 = new OpcaoDeJogada(i - 1, j - 1);
+			jogada2 = new OpcaoDeJogada(i - 1, j + 1);
+		}
+
+		if (peca === jogo.preto) {
+			jogada1 = new OpcaoDeJogada(i + 1, j - 1);
+			jogada2 = new OpcaoDeJogada(i + 1, j + 1);
+		}
+
+		jogo.mostrarOpcoes(jogada1, jogada2);
+
+		tabuleiro = jogo.tabuleiro;
+	}
 </script>
 
-<main>
+<main id="jogo">
 	<table>
-		{#each jogo.tabuleiro as linha, i}
+		{#each tabuleiro as linha, i}
 			<tr>
 				{#each linha as peca, j}
 					<td
 						class={(i + j) % 2 == 0 ? "bg" : ""}
-						on:click={() => jogo.mover(i, j)}
+						on:click={() => mover(i, j)}
 					>
 						{peca}
 					</td>
@@ -182,9 +170,12 @@
 </main>
 
 <style>
+	#jogo {
+		padding: 100px;
+	}
+
 	table {
-		margin-left: auto;
-		margin-right: auto;
+		margin: 0 auto;
 		border-collapse: collapse;
 	}
 
@@ -193,8 +184,8 @@
 		border-width: 2px;
 		text-align: center;
 		vertical-align: center;
-		height: 50px;
-		width: 50px;
+		height: 100px;
+		width: 100px;
 	}
 
 	.bg {
@@ -206,4 +197,3 @@
 		cursor: pointer;
 	}
 </style>
-
